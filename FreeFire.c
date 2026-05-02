@@ -7,13 +7,13 @@
 // Nível: Novato
 // Este programa simula o gerenciamento avançado de uma mochila com componentes coletados durante a fuga de uma ilha.
 // Ele introduz ordenação com critérios e busca binária para otimizar a gestão dos recursos.
-typedef struct {
+typedef struct {    // Estrutura contendo 3 atributos
     char nome[30];
     char tipo[20];
     int qtd;
 } Item;
 
-Item mochila[10];
+Item mochila[10]; // vetor do tipo Item que contêm 10 elementos com 3 campos cada
 
 int totalItens = 0;
 
@@ -22,11 +22,19 @@ void limparBufferEntrada();
 void inserirItem(Item mochila[]);
 void removerItem(Item mochila[]);
 void listarItens(Item mochila[]);
+int buscarItem(Item mochila[], int totalItens, const char *nome);
+void buscarItemPorNome(Item mochila[]);
 void exibirMenu();
 
 int main() {
     int opcao;
     char entrada[10];
+
+    #ifdef _WIN32 // Se a macro _WIN32 estiver DEFINIDA (compilando no Windows)
+        system("cls"); //limpa a tela no win
+    #else              // Senão (Linux, Mac, etc.)
+        system("clear"); //limpa tela no linux, mac, etc
+    #endif
 
     printf("-----------------------------------------------------\n");
     printf("    MOCHILA DE SOBREVIVÊNCIA - CÓDIGO DA ILHA\n");
@@ -48,17 +56,17 @@ int main() {
       }
 
       // valida opções do menu
-      if (opcao != 0 && opcao != 1 && opcao != 2 && opcao != 3) {
-          printf("Opcao invalida!\n");
+      if (opcao != 0 && opcao != 1 && opcao != 2 && opcao != 3 && opcao != 4) {
+          printf("Opcao invalida!\n\n");
           continue;
       }
-      
-    #ifdef _WIN32 //limpa a tela se for win
-        system("cls");
-    #else
-        system("clear"); // limpa tela no Linux
-    #endif
-      
+
+      #ifdef _WIN32 //limpando a tela se for win
+          system("cls");
+      #else
+          system("clear"); // limpando tela no Linux
+      #endif
+
       switch (opcao) {
       case 1:
           inserirItem(mochila);
@@ -69,17 +77,19 @@ int main() {
       case 3:
           listarItens(mochila);
           break;
+      case 4:
+          buscarItemPorNome(mochila);
+          break;
       case 0:
           printf("\nSaindo do sistema...\n");
           break;
       }
-
   } while (opcao != 0);
 
-    return 0;
+  return 0;
 }
-
-  // --- Implementação das funções ---
+  // ---=== Implementação das FUNÇÕES ===---
+  
   // Função Buffer de entrada
   void limparBufferEntrada() {
     int c;
@@ -114,7 +124,38 @@ int main() {
 
       printf("Item %s adicionado com sucesso!\n", novo.nome);
   }
-  // Função remover itens
+    // ---=== Função Buscar Item ===---
+
+  int buscarItem(Item mochila[], int totalItens, const char *nome) {
+      for (int i = 0; i < totalItens; i++) {
+          if (strcmp(mochila[i].nome, nome) == 0) {
+              return i;
+          }
+      }
+      return -1;
+  }
+
+  void buscarItemPorNome(Item mochila[]) {
+      char nomeBusca[30];
+
+      printf("Digite o nome do item a buscar: ");
+      fgets(nomeBusca, sizeof(nomeBusca), stdin);
+      nomeBusca[strcspn(nomeBusca, "\n")] = '\0';
+
+      int pos = buscarItem(mochila, totalItens, nomeBusca);
+
+      if (pos != -1) {
+          printf("Item encontrado!\n");
+          printf("Nome: %s | Tipo: %s | Quantidade: %d\n",
+                 mochila[pos].nome,
+                 mochila[pos].tipo,
+                 mochila[pos].qtd);
+      } else {
+          printf("Item nao encontrado!\n");
+      }
+  }
+
+    // Função Remover Itens
   void removerItem(Item mochila[]) {
       if (totalItens == 0) {
           printf("Mochila vazia!\n");
@@ -126,27 +167,22 @@ int main() {
       fgets(nomeBusca, sizeof(nomeBusca), stdin);
       nomeBusca[strcspn(nomeBusca, "\n")] = '\0';
 
-      int encontrado = 0;
-      for (int i = 0; i < totalItens; i++) {
-          if (strcmp(mochila[i].nome, nomeBusca) == 0) {
-              encontrado = 1;
-              for (int j = i; j < totalItens - 1; j++) {
-                  mochila[j] = mochila[j + 1];
-              }
-              totalItens--;
-              printf("Item %s removido com sucesso!\n", nomeBusca);
-              break;
-          }
-      }
+    int pos = buscarItem(mochila, totalItens, nomeBusca); //reaproveita a buscarItem
 
-      if (!encontrado) {
-          printf("Item nao encontrado!\n");
-      }
+    if (pos != -1) {
+        for (int i = pos; i < totalItens - 1; i++) {
+            mochila[i] = mochila[i + 1];
+        }
+        totalItens--;
+        printf("Item %s removido com sucesso!\n", nomeBusca);
+    } else {
+        printf("Item nao encontrado!\n\n");
+    }
+}
 
-  }
   // Função listar itens
   void listarItens(Item mochila[]){
-      printf("--- Itens na Mochila %d/10 ---\n", totalItens);
+      printf("\n--- Itens na Mochila %d/10 ---\n", totalItens);
       if (totalItens == 0){
           printf("Mochila vazia, adicione itens!\n");
           return;
@@ -160,7 +196,8 @@ int main() {
           printf("%d. %-18s | %-16s | %d\n", i+1, mochila[i].nome, mochila[i].tipo, mochila[i].qtd);
       }
       printf("-------------------------------------------------\n");
-  }
+   }
+
   // Função Exibir Menu
   void exibirMenu() {
 
@@ -168,6 +205,7 @@ int main() {
     printf("1 - Adicionar Item.\n");
     printf("2 - Remover Item\n");
     printf("3 - Listar Itens na Mochila\n");
+    printf("4 - Buscar Item por nome\n");
     printf("0 - Sair\n");
     printf("-------------------------------------------------\n");
     printf("Escolha sua ação: \n");
